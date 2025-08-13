@@ -1,18 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-HHE31T5ZEH"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-HHE31T5ZEH');
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>art gossip</title>
+    <title>Art Gossip - Easy Art Information & Price Estimates</title>
+    <meta name="description" content="Art Gossip provides easy-to-understand information on famous artworks, including AI-powered price estimates and simple descriptions. Explore art history from The Met's collection effortlessly in multiple languages.">
+    <meta name="keywords" content="art information, price estimates for art, easy art history, AI art insights, metropolitan museum art, artwork explorer">
+    <meta name="robots" content="index, follow">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='30' fill='%23FFD700'/%3E%3C/svg%3E">
     <style>
         body {
@@ -265,6 +259,14 @@
             }
         }
     </style>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HHE31T5ZEH"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-HHE31T5ZEH');
+    </script>
 </head>
 <body>
     <div id="header">
@@ -475,29 +477,29 @@
             // Set loading states
             const artElem = document.getElementById('art');
             artElem.classList.add('loading');
-          
+           
             const titleElem = document.getElementById('title');
             titleElem.innerHTML = '<div class="skeleton"></div>';
             titleElem.classList.add('loading');
-          
+           
             const artistElem = document.getElementById('artist');
             artistElem.innerHTML = '<div class="skeleton"></div>';
             artistElem.classList.add('loading');
-          
+           
             const descElem = document.getElementById('desc');
             descElem.innerHTML = '<div class="skeleton" style="width: 100%;"></div><div class="skeleton" style="width: 90%;"></div><div class="skeleton" style="width: 70%;"></div>';
             descElem.classList.add('loading');
-          
+           
             const valueElem = document.getElementById('value');
             valueElem.innerHTML = 'If we really had to price it: <span class="skeleton"></span>';
             valueElem.classList.add('loading');
-          
+           
             const justificationContainer = document.getElementById('justification-container');
             justificationContainer.classList.add('loading');
-          
+           
             const justificationElem = document.getElementById('justification');
             justificationElem.innerHTML = '<div class="skeleton" style="width: 100%;"></div><div class="skeleton" style="width: 90%;"></div><div class="skeleton" style="width: 70%;"></div>';
-          
+           
             try {
                 const response = await fetch(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`);
                 const data = await response.json();
@@ -507,13 +509,13 @@
                 }
                 artElem.src = data.primaryImage;
                 artElem.classList.remove('loading');
-              
+               
                 titleElem.textContent = data.title || 'Untitled';
                 titleElem.classList.remove('loading');
-              
+               
                 artistElem.textContent = data.artistDisplayName || 'Unknown Artist';
                 artistElem.classList.remove('loading');
-             
+              
                 // Generate descriptions
                 [shortDesc, longDesc] = await Promise.all([
                     generateShortDescriptionWithAI(data),
@@ -521,7 +523,7 @@
                 ]);
                 descElem.classList.remove('loading');
                 await updateDescription();
-             
+              
                 // Generate value, single
                 const range = await getEstimatedRangeWithAI(data);
                 const single = await getSinglePriceWithAI(data, range);
@@ -529,7 +531,7 @@
                 rawSingle = single;
                 valueElem.classList.remove('loading');
                 valueElem.textContent = await translateStatic('If we really had to price it') + ': ' + rawSingle;
-             
+              
                 // Now generate justifications after pricing
                 [shortJustification, longJustification] = await Promise.all([
                     generateShortJustificationWithAI(data),
