@@ -131,10 +131,11 @@
             margin: 10px auto 40px;
             max-width: 600px;
             opacity: 1;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.3s ease, filter 0.3s ease;
         }
         #desc.loading {
             opacity: 0.3;
+            filter: blur(2px);
         }
         #desc .skeleton {
             background: #eee;
@@ -146,10 +147,11 @@
             font-size: 16px;
             margin: 10px 0;
             opacity: 1;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.3s ease, filter 0.3s ease;
         }
         #value.loading {
             opacity: 0.3;
+            filter: blur(2px);
         }
         #value .skeleton {
             display: inline-block;
@@ -158,30 +160,14 @@
             height: 16px;
             animation: pulse 1.5s ease-in-out infinite;
         }
-        #single-price {
-            font-size: 14px;
-            color: #666;
-            margin: 5px 0;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        }
-        #single-price.loading {
-            opacity: 0.3;
-        }
-        #single-price .skeleton {
-            display: inline-block;
-            background: #eee;
-            width: 120px;
-            height: 14px;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
         #justification-container {
             margin-top: 10px;
             text-align: center;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.3s ease, filter 0.3s ease;
         }
         #justification-container.loading {
             opacity: 0.3;
+            filter: blur(2px);
         }
         #justification-toggle {
             background: none;
@@ -399,8 +385,7 @@
         <div id="toggle-indicator"></div>
     </div>
     <p id="desc"></p>
-    <p id="value">Estimated Value: </p>
-    <p id="single-price">(if we really had to price it: )</p>
+    <p id="value">If we really had to price it: </p>
     <div id="justification-container">
         <button id="justification-toggle">How did we determine this?</button>
         <p id="justification"></p>
@@ -481,30 +466,29 @@
             // Set loading states
             const artElem = document.getElementById('art');
             artElem.classList.add('loading');
-            
+          
             const titleElem = document.getElementById('title');
             titleElem.innerHTML = '<div class="skeleton"></div>';
             titleElem.classList.add('loading');
-            
+          
             const artistElem = document.getElementById('artist');
             artistElem.innerHTML = '<div class="skeleton"></div>';
             artistElem.classList.add('loading');
-            
+          
             const descElem = document.getElementById('desc');
             descElem.innerHTML = '<div class="skeleton" style="width: 100%;"></div><div class="skeleton" style="width: 90%;"></div><div class="skeleton" style="width: 70%;"></div>';
             descElem.classList.add('loading');
-            
+          
             const valueElem = document.getElementById('value');
-            valueElem.innerHTML = 'Estimated Value: <span class="skeleton"></span>';
+            valueElem.innerHTML = 'If we really had to price it: <span class="skeleton"></span>';
             valueElem.classList.add('loading');
-            
-            const singleElem = document.getElementById('single-price');
-            singleElem.innerHTML = '(if we really had to price it: <span class="skeleton"></span>)';
-            singleElem.classList.add('loading');
-            
+          
             const justificationContainer = document.getElementById('justification-container');
             justificationContainer.classList.add('loading');
-            
+          
+            const justificationElem = document.getElementById('justification');
+            justificationElem.innerHTML = '<div class="skeleton" style="width: 100%;"></div><div class="skeleton" style="width: 90%;"></div><div class="skeleton" style="width: 70%;"></div>';
+          
             try {
                 const response = await fetch(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`);
                 const data = await response.json();
@@ -514,13 +498,13 @@
                 }
                 artElem.src = data.primaryImage;
                 artElem.classList.remove('loading');
-                
+              
                 titleElem.textContent = data.title || 'Untitled';
                 titleElem.classList.remove('loading');
-                
+              
                 artistElem.textContent = data.artistDisplayName || 'Unknown Artist';
                 artistElem.classList.remove('loading');
-               
+             
                 // Generate descriptions
                 [shortDesc, longDesc] = await Promise.all([
                     generateShortDescriptionWithAI(data),
@@ -528,18 +512,15 @@
                 ]);
                 descElem.classList.remove('loading');
                 await updateDescription();
-               
+             
                 // Generate value, single
                 const range = await getEstimatedRangeWithAI(data);
                 const single = await getSinglePriceWithAI(data, range);
                 rawRange = range;
                 rawSingle = single;
                 valueElem.classList.remove('loading');
-                valueElem.textContent = await translateStatic('Estimated Value') + ': ' + rawRange;
-               
-                singleElem.classList.remove('loading');
-                singleElem.textContent = '(' + await translateStatic('if we really had to price it') + ': ' + rawSingle + ')';
-               
+                valueElem.textContent = await translateStatic('If we really had to price it') + ': ' + rawSingle;
+             
                 // Now generate justifications after pricing
                 [shortJustification, longJustification] = await Promise.all([
                     generateShortJustificationWithAI(data),
@@ -568,8 +549,7 @@
             } catch (error) {
                 console.error('Error fetching object:', error);
                 document.getElementById('desc').textContent = 'Error loading description.';
-                document.getElementById('value').textContent = 'Estimated Value: Not available';
-                document.getElementById('single-price').textContent = '(if we really had to price it: Not available)';
+                document.getElementById('value').textContent = 'If we really had to price it: Not available';
                 document.getElementById('justification').textContent = '';
                 // Remove loading classes
                 artElem.classList.remove('loading');
@@ -577,18 +557,17 @@
                 artistElem.classList.remove('loading');
                 descElem.classList.remove('loading');
                 valueElem.classList.remove('loading');
-                singleElem.classList.remove('loading');
                 justificationContainer.classList.remove('loading');
             }
         }
         async function generateShortDescriptionWithAI(data) {
             const details = dataToDetails(data);
-            const prompt = `Based on the following metadata about an artwork, write a clear, simple, and engaging short paragraph (2-4 sentences) about the piece. Use the details to accurately describe and contextualize it, highlighting interesting aspects like history, creation, or trivia. Strictly keep the entire paragraph under 400 characters. Do not mention that it is part of The Met’s collection. Do not include any character count, length note, or meta information. Do not use any special formatting like bold, italics, asterisks, or phrases that reference this prompt. Use plain text only, but emojis are allowed if appropriate:\n\n${details}`;
+            const prompt = `Based on the following metadata about an artwork, write a conversational, interesting, and story-like short paragraph (2-4 sentences) that is easy to read. Make it professional and polite, incorporating interesting facts and highlighting aspects like history, creation, or trivia. Strictly keep the entire paragraph under 400 characters. Do not mention that it is part of The Met’s collection. Do not include any character count, length note, or meta information. Do not use any special formatting like bold, italics, asterisks, or phrases that reference this prompt. Use plain text only, but emojis are allowed if appropriate:\n\n${details}`;
             return await callDeepSeekAPI(prompt);
         }
         async function generateLongDescriptionWithAI(data) {
             const details = dataToDetails(data);
-            const prompt = `Based on the following metadata about an artwork, write a clear, simple, and engaging paragraph (3-6 sentences) about the piece. Use the details to accurately describe and contextualize it, highlighting interesting aspects like history, creation, or trivia. Keep the paragraph under 1000 characters. Do not mention that it is part of The Met’s collection. Do not include any character count, length note, or meta information. Do not use any special formatting like bold, italics, asterisks, or phrases that reference this prompt. Use plain text only, but emojis are allowed if appropriate:\n\n${details}`;
+            const prompt = `Based on the following metadata about an artwork, write a conversational, interesting, and story-like paragraph (3-6 sentences) that is easy to read. Make it professional and polite, incorporating interesting facts and highlighting aspects like history, creation, or trivia. Keep the paragraph under 1000 characters. Do not mention that it is part of The Met’s collection. Do not include any character count, length note, or meta information. Do not use any special formatting like bold, italics, asterisks, or phrases that reference this prompt. Use plain text only, but emojis are allowed if appropriate:\n\n${details}`;
             return await callDeepSeekAPI(prompt);
         }
         async function generateShortJustificationWithAI(data) {
@@ -694,11 +673,11 @@ Tags: ${data.tags ? data.tags.map(tag => tag.term).join(', ') : 'None'}
             document.getElementById('desc').textContent = text;
         }
         async function updateJustification() {
-            let text = preferredLength === 'long' ? longJustification : shortJustification;
-            if (currentLang !== 'en') {
-                text = await translateText(text, 'en', currentLang);
-            }
-            document.getElementById('justification').textContent = text;
+            let justificationText = preferredLength === 'long' ? longJustification : shortJustification;
+            let translatedLabel = await translateStatic('Estimated value range');
+            let translatedJust = currentLang === 'en' ? justificationText : await translateText(justificationText, 'en', currentLang);
+            let fullText = `<div style="text-align: center; margin-bottom: 10px;">${translatedLabel}: ${rawRange}</div>${translatedJust}`;
+            document.getElementById('justification').innerHTML = fullText;
         }
         async function translateText(text, from, to) {
             try {
@@ -719,8 +698,7 @@ Tags: ${data.tags ? data.tags.map(tag => tag.term).join(', ') : 'None'}
             return await translateText(text, 'en', currentLang);
         }
         async function updateLanguage() {
-            document.getElementById('value').textContent = await translateStatic('Estimated Value') + ': ' + rawRange;
-            document.getElementById('single-price').textContent = '(' + await translateStatic('if we really had to price it') + ': ' + rawSingle + ')';
+            document.getElementById('value').textContent = await translateStatic('If we really had to price it') + ': ' + rawSingle;
             document.getElementById('justification-toggle').textContent = await translateStatic('How did we determine this?');
             document.getElementById('disclosure').textContent = await translateStatic(originalDisclosure);
             await updateDescription();
