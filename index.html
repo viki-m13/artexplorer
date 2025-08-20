@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>art gossip</title>
-    <meta name="description" content="art gossip provides easy-to-understand information on famous artworks, including price estimates and simple descriptions.">
+    <meta name="description" content="art gossip provides easy-to-understand information on famous artworks, including price estimates and simple descriptions. Explore art history from The Met's collection effortlessly in multiple languages.">
     <meta name="keywords" content="art information, price estimates for art, easy art history, art insights, art fun facts, art trivia, metropolitan museum art, artwork explorer">
     <meta name="robots" content="index, follow">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <meta property="og:title" content="art gossip - easy art information & price estimates">
-    <meta property="og:description" content="art gossip provides easy-to-understand information on famous artworks, including price estimates and simple descriptions.">
+    <meta property="og:description" content="art gossip provides easy-to-understand information on famous artworks, including price estimates and simple descriptions. explore art history from The Met's collection effortlessly in multiple languages.">
     <meta property="og:image" content="https://viki-m13.github.io/artexplorer/favicon.ico"> <!-- Update to your hosted favicon URL -->
     <meta property="og:url" content="https://art-gossip.com">
     <meta property="og:type" content="website">
@@ -265,9 +265,6 @@
         gtag('js', new Date());
         gtag('config', 'G-HHE31T5ZEH');
     </script>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
     <div id="header">
@@ -406,19 +403,8 @@
         <button id="prev" aria-label="Previous Artwork">←</button>
         <button id="next" aria-label="Next Artwork">→</button>
     </div>
+        </div>
     <script>
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-        const firebaseConfig = {
-            apiKey: "AIzaSyA_nsuO4eaDQgMtMb-2Zrw7GeeaWeWPJ8E",
-            authDomain: "art-gossip-cache.firebaseapp.com",
-            databaseURL: "https://art-gossip-cache-default-rtdb.firebaseio.com",
-            projectId: "art-gossip-cache",
-            storageBucket: "art-gossip-cache.firebasestorage.app",
-            messagingSenderId: "81410350552",
-            appId: "1:81410350552:web:70241ec3d4fc2d5a3a26ad",
-            measurementId: "G-FPXK8Z8ZY5"
-        };
-        firebase.initializeApp(firebaseConfig);
         const DEEPSEEK_API_KEY = 'sk-457f3a9291c74e9589c87eb822c98ae6'; // Replace with your actual DeepSeek API key
         let objectIDs = [];
         let history = [];
@@ -486,29 +472,29 @@
             // Set loading states
             const artElem = document.getElementById('art');
             artElem.classList.add('loading');
-         
+          
             const titleElem = document.getElementById('title');
             titleElem.innerHTML = '<div class="skeleton"></div>';
             titleElem.classList.add('loading');
-         
+          
             const artistElem = document.getElementById('artist');
             artistElem.innerHTML = '<div class="skeleton"></div>';
             artistElem.classList.add('loading');
-         
+          
             const descElem = document.getElementById('desc');
             descElem.innerHTML = '<div class="skeleton" style="width: 100%;"></div><div class="skeleton" style="width: 90%;"></div><div class="skeleton" style="width: 70%;"></div>';
             descElem.classList.add('loading');
-         
+          
             const valueElem = document.getElementById('value');
             valueElem.innerHTML = 'If we really had to price it: <span class="skeleton"></span>';
             valueElem.classList.add('loading');
-         
+          
             const justificationContainer = document.getElementById('justification-container');
             justificationContainer.classList.add('loading');
-         
+          
             const justificationElem = document.getElementById('justification');
             justificationElem.innerHTML = '<div class="skeleton" style="width: 100%;"></div><div class="skeleton" style="width: 90%;"></div><div class="skeleton" style="width: 70%;"></div>';
-         
+          
             try {
                 const response = await fetch(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`);
                 const data = await response.json();
@@ -518,64 +504,36 @@
                 }
                 artElem.src = data.primaryImage;
                 artElem.classList.remove('loading');
-             
+              
                 titleElem.textContent = data.title || 'Untitled';
                 titleElem.classList.remove('loading');
-             
+              
                 artistElem.textContent = data.artistDisplayName || 'Unknown Artist';
                 artistElem.classList.remove('loading');
-            
-                // Check Firebase cache
-                const dbRef = firebase.database().ref('artworks/' + id);
-                const snapshot = await dbRef.once('value');
-                if (snapshot.exists()) {
-                    const cached = snapshot.val();
-                    shortDesc = cached.shortDesc;
-                    longDesc = cached.longDesc;
-                    shortJustification = cached.shortJustification;
-                    longJustification = cached.longJustification;
-                    rawRange = cached.rawRange;
-                    rawSingle = cached.rawSingle;
-                    descElem.classList.remove('loading');
-                    await updateDescription();
-                    valueElem.classList.remove('loading');
-                    valueElem.textContent = await translateStatic('If we really had to price it') + ': ' + rawSingle;
-                    await updateJustification();
-                    justificationContainer.classList.remove('loading');
-                } else {
-                    // Generate descriptions
-                    [shortDesc, longDesc] = await Promise.all([
-                        generateShortDescriptionWithAI(data),
-                        generateLongDescriptionWithAI(data)
-                    ]);
-                    descElem.classList.remove('loading');
-                    await updateDescription();
-                
-                    // Generate value, single
-                    const range = await getEstimatedRangeWithAI(data);
-                    rawRange = range;
-                    const single = await getSinglePriceWithAI(data, range);
-                    rawSingle = single;
-                    valueElem.classList.remove('loading');
-                    valueElem.textContent = await translateStatic('If we really had to price it') + ': ' + rawSingle;
-                
-                    // Now generate justifications after pricing
-                    [shortJustification, longJustification] = await Promise.all([
-                        generateShortJustificationWithAI(data),
-                        generateLongJustificationWithAI(data)
-                    ]);
-                    await updateJustification();
-                    justificationContainer.classList.remove('loading');
-                    // Save to Firebase
-                    await dbRef.set({
-                        shortDesc: shortDesc,
-                        longDesc: longDesc,
-                        shortJustification: shortJustification,
-                        longJustification: longJustification,
-                        rawRange: rawRange,
-                        rawSingle: rawSingle
-                    });
-                }
+             
+                // Generate descriptions
+                [shortDesc, longDesc] = await Promise.all([
+                    generateShortDescriptionWithAI(data),
+                    generateLongDescriptionWithAI(data)
+                ]);
+                descElem.classList.remove('loading');
+                await updateDescription();
+             
+                // Generate value, single
+                const range = await getEstimatedRangeWithAI(data);
+                const single = await getSinglePriceWithAI(data, range);
+                rawRange = range;
+                rawSingle = single;
+                valueElem.classList.remove('loading');
+                valueElem.textContent = await translateStatic('If we really had to price it') + ': ' + rawSingle;
+             
+                // Now generate justifications after pricing
+                [shortJustification, longJustification] = await Promise.all([
+                    generateShortJustificationWithAI(data),
+                    generateLongJustificationWithAI(data)
+                ]);
+                await updateJustification();
+                justificationContainer.classList.remove('loading');
                 // Reset dropdown but keep expanded state
                 const toggle = document.getElementById('justification-toggle');
                 toggle.textContent = await translateStatic('How did we determine this?');
