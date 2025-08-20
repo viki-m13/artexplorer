@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 # Credentials (use env vars in production/GitHub secrets)
 IG_USERNAME = os.getenv('IG_USERNAME')
 IG_PASSWORD = os.getenv('IG_PASSWORD')
-DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
+DEEPSEEK_API_KEY = os.getenv('sk-457f3a9291c74e9589c87eb822c98ae6')
 SESSION_FILE = 'session.json'
 
 # Function to handle login with session
